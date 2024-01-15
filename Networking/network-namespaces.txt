@@ -1,0 +1,89 @@
+- When a container is created, we create a network namespace for it.
+
+- it has no visibility to any network-related information on the host.
+
+- Within its namespace, the container can have its own virtual interfaces routing and ARP tables.
+
+- To create a network namespace on the host run the following command:
+  ip netns add NAMESPACE_NAME
+
+- Run ip netns to list network namespaces
+
+- To see the interfaces inside the created network namespace run the following command:
+  ip netns exec NAMESPACE_NAME ip link
+
+- You can connect two namespaces together using a virtual ethernet pair or a virtual cable
+  ip link add veth-red type veth peer name veth-blue
+
+- The next step is to attach each interface to the appropriate namespace
+  ip link set veth-red netns red (Attaching red interface to the red namespace)
+  ip link add veth-blue netns blue (Attaching blue interface to the blue namespace)
+
+- Assign ip address to the red interface
+  ip -n red addr add 192.168.15.1 dev veth-red
+
+- Assign ip address to the blue interface
+  ip -n blue addr add 192.168.15.2 dev veth-blue
+
+- We then bring the interface using the ip link command
+  ip -n red link set veth-red up
+  ip -n blue link set veth-blue up
+
+- Try to ping the ip address of the blue interface from red namespace
+  ip netns exec red ping 192.168.15.2
+
+
+- To create a virtual switch to connect those namespaces to this switch, we use Linux Bridge solution
+
+- To create an internal bridge network, we've to add a new interface to the host using ip link add command
+  ip link add v-net-0 type bridge
+- We've to turn it up
+  ip link set dev v-net-0 up
+- This interface is like a switch for the namespaces
+
+- Then, we create bridge interfaces for the namespaces blue and red:
+  ip link add veth-blue type veth peer name veth-blue-br
+  ip link add veth-red type veth peer name veth-red-br
+
+- Attach one of the interfaces to the red namespace, run the ip link set command:
+  ip link set veth-red netns red
+
+- To attach the end interface (veth-red-br) to the bridge network run the ip link set command:
+  ip link set veth-red-br master v-net-0
+
+- Follow the same procedure to attach the blue cable to the blue namespace and the bridge network
+  ip link set veth-blue netns blue
+  ip link set veth-blue-br master v-net-0
+
+- Attach ip addresses to the both interfaces:
+  ip -n red addr add 192.168.15.1 dev veth-red
+  ip -n blue addr add 192.168.15.2 dev veth-blue
+
+- Turn up the red and blue interfaces:
+  ip -n red link set veth-red up
+  ip -n blue link set veth-blue up
+
+- To create a connectivity between the host and the namespaces we've to use the switch network interface.
+- We've to assign ip addresses for it:
+  ip addr add 192.168.15.5/24 dev v-net-0
+
+- Try to ping the red namespace ip address from your host:
+  ping 192.168.15.1
+
+- To allow the network under blue and red namespaces to reach another network, we've to add a route table
+- Connect your network interface to the local host network using route table entry:
+  ip netns exec blue ip route add 192.168.1.0/24 via 192.168.15.5 (connecting switch to the local host)
+- You can now ping the 192.168.1.3 host, but you'll not get a response back
+- You've to add a NAT gateway:
+  iptables -t nat -A POSTROUTING -s 192.168.15.0/24 -j MASQUERADE
+
+- Still, the network interface on the namespaces cannot reach the gateway host, for that we need to add a default route table:
+  ip netns exec blue ip route add default via 192.168.15.5
+- Try to ping:
+  ip netns exec blue ping 8.8.8.8
+
+- To allow communication from outside host to our private network, we've to tell the NAT gateway about the private route table
+  entry (but that is not recommended)
+
+- We can use port forwarding from the NAT gateway:
+  iptables -t nat -A PREROUTING --dport 80 --to-destination 192.168.15.2:80 -j DNAT

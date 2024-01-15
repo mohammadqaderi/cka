@@ -1,0 +1,46 @@
+- None of the kubernetes cluster components versions should be higher than the kube-apiserver version
+
+- Components like controller-manger, kube-scheduler can be at the same version or lower with one version (X-1)
+
+- Components like kubelet, kube-proxy can be at the same version or lower with one or two versions (X-1 or X-2)
+
+- kubectl component can be at the same version or higher/lower unlike other components (X or X-1 X + 1)
+
+- Kubernetes can support up to three minor versions
+  - Current version: v1.10
+  - Can support v1.10 , v1.11, v1.12
+  - in case v1.13 is supported then, (v1.11, v1.12, v1.13) are supported, but (v1.10) is not supported
+  - The recommended approach is to upgrade 1 minor version at a time.
+  - You start by upgrading the master node then the worker nodes
+  - When upgrading the master node, the controlplane components like apiserver, scheduler go down briefly.
+
+- Strategies of upgrading worker nodes:
+  - all at once: all the worker nodes with all their applications will go down, and the user will be impacted.
+  - upgrade one node at a time: start upgrading first node until it work again, then start upgrading the second node
+    until it work again, etc... (no downtime here)
+  - add new nodes to the cluster: all the workloads under the old nodes will be moved to the new nodes, and the old nodes
+    will be terminated.
+
+
+- Upgrade kubeadm cluster:
+ - upgrade controlplane node:
+   -> run apt update
+   -> install kubeadm required version: apt-get install kubeadm=1.27.0-00
+   -> upgrade kubeadm version: kubeadm upgrade apply v1.27.0
+   -> install kubelet required version: apt-get install kubelet=1.27.0-00
+   -> sudo apt-mark hold kubelet kubeadm kubectl
+   -> run daemon-reload command and restart the kubelet service:
+     systemctl daemon-reload
+     systemctl restart kubelet
+   -> run kubectl uncordon controlplane
+
+  - upgrade other worker nodes:
+    -> ssh NODE_NAME
+    -> run apt update
+    -> install kubeadm required version: apt-get install kubeadm=1.27.0-00
+    -> upgrade kubeadm node: kubeadm upgrade node
+    -> install kubelet required version: apt-get install kubelet=1.27.0-00
+    -> run daemon-reload command and restart the kubelet service:
+      systemctl daemon-reload
+      systemctl restart kubelet
+    -> run kubectl uncordon NODE_NAME

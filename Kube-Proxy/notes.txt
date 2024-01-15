@@ -1,0 +1,11 @@
+Kube Proxy
+
+- kube-proxy is a process that runs on each node in the kubernetes cluster.
+- its job is to look for new services and everytime a new service
+  is created, it creates the appropriate rules on each node to forward
+  traffic to those services to the backend pods.
+- One way it does this is using IPTABLES rules.
+- in this case, it creates an IP table rule on each node in the cluster
+  to forward traffic heading to the IP of the service which is 10.96.0.12
+  to the IP of the actual pod which is 10.32.0.15
+  -> checkout the kube-proxy example in this folder.

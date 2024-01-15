@@ -1,0 +1,22 @@
+- When a service gets created, Kubernetes assign an ip to it.
+
+- That is configured under kube-apiserver configuration --service-cluster-ip-range
+
+- iptables -L -t nat -> list all rules for services
+
+- cat /var/log/kube-proxy.log -> check added services from kube-proxy
+
+- If you asked what network range are the nodes in the cluster part of:
+  run ip addr command and check the eth0 interface
+
+- If you asked what is the range of IP addresses configured for Pods in the cluster:
+  - check what is the network plugin used in the cluster (usually it's weave or flannel)
+  - get the weave/flannel pods from kube-system namespace and logs their output and search for ipalloc-range value
+
+- If you asked what is the IP range configured for the services within the cluster:
+  - run ps aux | grep -i kube-apiserver | grep -i service-cluster-ip-range
+  - Or, cat /etc/kubernetes/manifests/kube-apiserver.yaml
+
+- If you asked what type of proxy is the kube-proxy configured to use:
+  - logs the kube-proxy pod in kube-system namespace, and you'll find the answer
+

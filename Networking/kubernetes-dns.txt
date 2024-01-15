@@ -1,0 +1,26 @@
+- When you create a kubernetes cluster, kubernetes creates a DNS server internally
+
+- When you create a service, kubernetes creates a DNS record in DNS server and assign IP for it
+  - Hostname
+  - IP address
+  - Namespace
+  - Type -> default is svc
+  - Root -> cluster.local
+
+
+- For each namespace, DNS server creates a subdomain, for that when you call a service from different namespace:
+  curl http://web-service.NAMESPACE_NAME
+
+- All the services are grouped together into another namespace called svc
+  curl http://web-service.NAMESPACE_NAME.svc
+
+- All the services and pods are grouped together into a root domain for the cluster which is set to cluster.local
+
+- For pods records, the hostname is the IP address and separated by dashes:
+  - Hostname
+  - IP address
+  - Namespace
+  - Type -> default is pod
+  - Root -> default is cluster.local
+
+  curl http://10-244-2-5.NAMESPACE_NAME.pod.cluster.local

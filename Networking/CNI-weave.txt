@@ -1,0 +1,15 @@
+kubectl apply -f https://github.com/weaveworks/weave/releases/download/v2.8.1/weave-daemonset-k8s.yaml
+
+- For all the supported CNI binaries plugins are exist in the following path:
+  /opt/cni/bin
+
+- To check what is the configured on the kubernetes cluster, find it from this path:
+  /etc/cni/net.d/
+
+
+- To check what is the executable file that will be run by the kubelet after a container and its created
+  associated namespace is created, check this file:
+  cat /etc/cni/net.d/10-flannel.conflist
+
+- If you asked to check how many weave agents deployed in the kubernetes cluster, checkout the number of weave pods:
+  k get pods -n kube-system

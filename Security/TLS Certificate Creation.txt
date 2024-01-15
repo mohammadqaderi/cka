@@ -1,0 +1,38 @@
+To generate a certificate in kubernetes, we've multiple options
+ - EASYRSA
+ - OPENSSL
+ - CFSSL
+
+Using OPENSSL
+
+- generate certificate command: openssl genrsa -out ca.key 2048 -> ca.key
+
+- Certificate signing request command: openssl req -new -key ca.key -subj "/CN=KUBERNETES-CA" -out ca.csr -> ca.csr
+
+- Sign certificate command: openssl x509 -req in ca.csr -signkey ca.key -out ca.crt -> ca.crt
+
+------------------------------------------------------------------------------------------------
+
+Example of generating a certificate for Admin client
+
+- generate certificate command: openssl genrsa -out admin.key 2048 -> admin.key
+
+- Certificate signing request command: openssl req -new -key admin.key -subj "/CN=kube-admin/O=system:masters" -out admin.csr -> admin.csr
+
+- Sign certificate command: openssl x509 -req in admin.csr -CA ca.crt -CAKey ca.key -out admin.crt -> admin.crt
+
+Once the admin certificates have been generated, you can use them to communicate with the kube-apiserver:
+curl https://kube-apiserver:6443/api/v1/pods --key admin.key --cert admin.cert --cacert ca.crt
+
+Note: we specified O=system:masters to add this user to administration group to give him the admin privileges
+
+--------------------------------------------------------------------------------
+
+For Kube-apiserver we've to mention the DNS names for the server in order to make them available under the hood
+- Create openssl.cnf file
+- For sign certificate step Run the following command:
+  openssl x509 -req in apiserver.csr -CA ca.crt -CAKey ca.key -CAcreateserial -out apiserver.crt --extensions v3_req -extfile openssl.cnf -days 1000 -> apiserver.crt
+
+Note: for worker nodes we've to specify O=system:node:node01 to add this node to the SYSTEM NODES group (01 is just a unique name for the node)
+
+------------------------------------------------------------------------------------------------

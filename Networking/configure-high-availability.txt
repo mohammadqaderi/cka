@@ -1,0 +1,27 @@
+- In Multi-cluster kubernetes architecture, if multiple instances runs in parallel they might duplicate actions like:
+  - Controller Manager
+  - Kube Scheduler
+  - Kube-apiserver
+
+- They must not run in parallel
+
+- They run in an active standby mode
+
+- A leader election process is responsible to decide which cluster is active and in standby mode
+
+- For instance, the kube-controller-manager can use the leader election process to become the leader
+  kube-controller-manager --leader-elect true \
+                          --leader-elect-lease-duration 15s \
+                          --leader-elect-renew-deadline 10s \
+                          --leader-elect-retry-period 2s
+
+
+
+- ETCD
+  - is part of the kubernetes master nodes.
+  - it's called as a stacked control plan nodes topology.
+  - But if one node goes down, both an ETCD member and control plan instance is lost and redundancy is compromised.
+
+  - Another topology where ETCD is separated from the control plan nodes and run on its own set of servers.
+  - In case a node goes down will not impact the ETCD cluster and the data is stored.
+  - It's harder to setup than the first topology.

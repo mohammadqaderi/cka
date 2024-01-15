@@ -1,0 +1,21 @@
+- For each certificates in the kubernetes cluster, we can view their details using openssl command
+
+- command: openssl x509 -in /etc/kubernetes/pki/apiserver.crt -text -noout
+
+- To inspect kubernetes service like etcd.service use the journalctl command
+  - journalctl -u etcd.service -l
+
+- You can also use the kubectl command to view the etcd pod logs
+  - kubectl logs etcd-master
+
+- In case the kube-apiserver is down, we've to go one level down and inspect the docker container
+  - docker ps -a
+  - docker logs 31s2
+
+Note: when you investigate the kube-apiserver connection errors, and you see the following error:
+  addrConn.createTransport failed to connect to the host:2379 (that's etcd server host)
+Then there are issues in the etcd client certificate (mostly its incorrect server/client etcd certificate path).
+
+- Checkout this link to view the certificates paths for all kubernetes components in the cluster
+  https://github.com/mmumshad/kubernetes-the-hard-way/tree/master/tools
+

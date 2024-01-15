@@ -1,0 +1,118 @@
+Scheduling
+
+- What if we don't have a scheduler in our cluster?
+  -> We've to create a Binding object to assign a specific resource to a specific node
+  -> by that, we can rely on this binding object to schedule the resource in creation time to a specific node
+
+------------------------------------------------------------------------------------------------
+
+Static Pods
+ - if we've a worker node, and we've a kubelet agent on it, we can't create any kubernetes object because
+ we don't have kube-apiserver, controller or master node.
+
+ - With static pods, you can specify the definition files (for example: pod1.yaml, pod2.yaml, etc..) and add it
+ in the "/etc/kubernetes/manifests" directory and kubelet can access them.
+
+ - The kubelet works at a Pod level, and it can only understand pods, which is why is able to create static pods.
+
+ - in the kubelet.service file, you'll find a property called "pod-manifest-path", and it's pointed to the designated
+  directory that the kubelet will look for it in order to create the manifest files for the pods.
+
+ - Instead of specifying the "pod-manifest-path" property, you can replace it with option called "config"
+ and it'll point to a config file located in the worker node.
+  -> the content of the config file will contain option called "staticPodPath" that'll point to the designated
+   directory that the kubelet will look for it in order to create the manifest files for the pods.
+
+ - When the kubelet creates the manifest files, then use docker ps to view the running containers because
+ kubelet has created them as containers not as pods because we don't have a kube-apiserver.
+
+ - The kubelet create resources from different inputs:
+  - from static pods manifest files
+  - from kube-apiserver api request.
+
+ - In case the kubelet creates the manifest files with the existence of a master node and kube-apiserver then:
+   - You can't delete these pods or edit them.
+   - Each time a pod crashes, the kubelet will attempt to restart it.
+   - Use cases for static pods manifest files:
+     - controller-manager.yaml
+     - apiserver.yaml
+     - etcd.yaml
+ - You'll find the kubelet configuration in the worker node in this directory /var/lib/kubelet
+ - Please note that kube-scheduler is ignored in static pods.
+
+
+- If you asked to create a static pod in a worker node, do the following:
+ - Create the pod in the controlplane node:
+   kubectl run nginx-critical --image=nginx --dry-run=client -o yaml > static.yaml
+ - Move the pod to the worker node:
+   scp static.yaml node01:/root
+ - login to node01:
+   ssh node01
+ - Check if static pod directory is present which is /etc/kubernetes/manifests, if it's not present then create it.
+ - Add that complete path to the staticPodPath field in the kubelet config.yaml file.
+ - move/copy the static.yaml to path /etc/kubernetes/manifests/
+ - Go back to the controlplane node and check the status of static pod:
+   k get pods -A
+
+
+
+
+DaemonSets Vs Static Pods
+  - Static Pods
+    -> Created by Kubelet
+    -> Deploy Control Plane components as static pods
+    -> Ignored by the Kube-Scheduler
+
+  - DaemonSets:
+    -> Created by Kube-apiserver
+    -> Used to deploy monitoring agents, Logging agents on nodes.
+    -> Ignored by the Kube-Scheduler
+
+
+
+------------------------------------------------------------------------------------------------
+
+To create a pod using custom scheduler, add the following property to the pod definition file:
+  schedulerName: scheduler-name
+
+------------------------------------------------------------------------------------------------
+
+Learn how to deploy multiple schedulers on a master node and specify a custom scheduler to a pod definition file
+
+------------------------------------------------------------------------------------------------
+
+Configuring Scheduler Profiles
+
+Reference URL:
+
+- In scheduling process, there are a set of execution phases to be executed before the scheduler schedule a pod to a node
+  - Scheduling Queue Phase: The scheduler will list all the pending pods in this queue
+       - The pods will be sorted in this queue based on the priority of the pod "priorityClass" property
+
+  - Filtering Phase: The nodes will be filtered to be suited to the pods resources requirements (Ex: cpu, memory)
+
+  - Scoring Phase: The scheduler associates a score for remaining nodes based on the free space
+       - The node with the highest score will be picked up.
+
+  - Binding Phase: This is the final phase where the pod bound to the node
+
+
+- All of these phases are controlled with a scheduling plugins
+  - Scheduling Queue Phase is controlled with a plugin called "PrioritySort"
+  - Filtering Phase is controlled with a plugin called "NodeResourcesFit" or "NodeName" plugin or "NodeUnschedulable" plugin.
+  - Scoring Phase is controlled with a plugin called "NodeResourcesFit" or "ImageLocality" plugin.
+  - Binding Phase is controlled with a plugin called "DefaultBinder"
+
+
+
+More about kubernetes scheduler:
+
+ -> https://kubernetes.io/docs/reference/scheduling/config/#profiles
+
+ -> https://github.com/kubernetes/community/blob/master/contributors/devel/sig-scheduling/scheduling_code_hierarchy_overview.md
+
+ -> https://kubernetes.io/blog/2017/03/advanced-scheduling-in-kubernetes/
+
+ -> https://jvns.ca/blog/2017/07/27/how-does-the-kubernetes-scheduler-work/
+
+ -> https://stackoverflow.com/questions/28857993/how-does-kubernetes-scheduler-work

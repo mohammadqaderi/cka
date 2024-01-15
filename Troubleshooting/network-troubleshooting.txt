@@ -1,0 +1,16 @@
+- Check the kube-proxy logs to detect the network interface bridge solution.
+
+- If the network addon solution is not installed for ex: weave-net, then install it from the official docs.
+
+- If the kube-proxy is not working check its logs, if the error is related to wrong configuration file, then correct it.
+Example of correct configuration file for kube-proxy daemonset is:
+spec:
+    containers:
+    - command:
+        - /usr/local/bin/kube-proxy
+        - --config=/var/lib/kube-proxy/config.conf
+        - --hostname-override=$(NODE_NAME)
+
+
+- Checkout the following docs to know more about the network troubleshooting tricks:
+https://kodekloud.com/topic/network-troubleshooting/

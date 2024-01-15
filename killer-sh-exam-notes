@@ -1,0 +1,182 @@
+Question-3
+- to scale up/down a stateful set, run the following command:
+k -n project-c13 scale sts STATEFULSET_NAME --replicas 1
+----------------------------------------------------------------
+
+Question-7
+- to show Pods and their containers resource usage, run the following command:
+k top pod --containers=true
+----------------------------------------------------------------
+
+Question-8
+- to get the controlplane information, do the following steps:
+  - SSH to the controlplane node
+  - Check if the kubelet is process: ps aux | grep kubelet
+  - Check if the etcd is process: ps aux | grep etcd
+  - Check static pods in kube-system namespace: kubectl -n kube-system get pod -o wide | grep controlplane
+----------------------------------------------------------------
+
+Question-12
+- if you asked to create a deployment with 3 replicas, two pods will be scheduled in two nodes (node1 and node2) but
+the third pod won't be scheduled, unless a new worker node will be added
+
+There are two possible ways, one using podAntiAffinity and one using topologySpreadConstraint.
+
+#Using podAntiAffinity:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: id
+                operator: In
+                values:
+                - very-important
+            topologyKey: kubernetes.io/hostname
+
+#Using topologySpreadConstraint
+      topologySpreadConstraints:
+      - maxSkew: 1
+        topologyKey: kubernetes.io/hostname
+        whenUnsatisfiable: DoNotSchedule
+        labelSelector:
+          matchLabels:
+            id: very-important
+
+----------------------------------------------------------------
+
+Question-13
+- if you asked to schedule a pod and have the name of the node where its
+Pod is running available as environment variable MY_NODE_NAME.
+
+Solution: (Use fieldRef and fieldPath)
+env:
+- name: MY_NODE_NAME
+  valueFrom:
+    fieldRef:
+      fieldPath: spec.nodeName
+
+
+----------------------------------------------------------------
+
+Question-14 (Cluster Information)
+
+- What is the Service CIDR?
+ -> check the --service-cluster-ip-range in /etc/kubernetes/manifests/kube-apiserver.yaml
+
+Which Networking (or CNI Plugin) is configured and where is its config file?
+ -> Check the cni directory: find /etc/cni/net.d/
+ -> the config file is the network solution ends with .conflist path
+
+Which suffix will static pods have that run on cluster1-node1?
+ -> The suffix is the node hostname with a leading hyphen. It used to be -static in earlier Kubernetes versions.
+
+----------------------------------------------------------------
+
+Question-15
+Note: Use crictl for show containers list, containers Logs, etc...
+
+----------------------------------------------------------------
+
+Question-16
+- Get the names of all namespaced Kubernetes resources (like Pod, Secret, ConfigMap...)
+Solution: k api-resources --namespaced=true
+
+----------------------------------------------------------------
+
+Question-18
+Note: beside the investigation of kubelet service or manifests files, check the kubelet conf file:
+vim /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+and check if the configuration is correct or not.
+
+----------------------------------------------------------------
+
+Question-20 (Upgrading Kubernetes version and join cluster)
+- Check this link: https://kubernetes.io/docs/tasks/administer-cluster/kubeadm/kubeadm-upgrade
+
+- In case the node you want to update didn't joined the controlplane cluster before, you've to start updating
+the kubectl and kubelet versions to the required version
+
+- Show the kubectl version and the kubelet version:
+apt show kubectl -a | grep REQUIRED_VERSION
+apt show kubectl -a | grep REQUIRED_VERSION
+
+- Install kubectl and kubelet:
+apt install kubectl=REQUIRED_VERSION kubelet=REQUIRED_VERSION
+
+- Login to the controlplane node and run "kubeadm token create" command with --print-join-command option
+
+- Copy the output of the kubeadm command and paste it in the worker node
+
+- The Node is ready!
+
+-----------------------------------------------------------------
+
+Question-21
+- You can use the kubeadm to check the cluster certifications details
+  kubeadm certs check-expiration
+
+
+-----------------------------------------------------------------
+
+Question-23
+- You asked to find information about the kubelet client certificate and kubelet server certificate
+Steps:
+- You can use kubelet --cert-dir option to find the pki keys for kubelet
+- Or you can cat /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+
+
+-----------------------------------------------------------------
+
+Question-25
+- Whenever you want to stop controlplane component, move it from manifests directory to another directory, do your changes,
+then move it back to manifests directory.
+
+- Once you made a restore to ETCD DB, change the hostPath path to the new directory location
+  - hostPath:
+      path: /var/lib/etcd-backup                # New Path
+      type: DirectoryOrCreate
+    name: etcd-data
+
+-----------------------------------------------------------------
+
+Extra Question-1
+- if you asked to find the pods that would be terminated in case the node is out OF resources (cpu or memory)
+
+Solution:
+- Those pods are usually the pods with no limit specified (Best Effort QOS)
+- Find those pods using the following command:
+ k get pods -o jsonpath="{range .items[*]}{.metadata.name} {.status.qosClass}{'\n'}"
+
+-----------------------------------------------------------------
+
+Extra Question-2
+- if you asked to call kubernetes API from pod, do the following steps:
+TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+curl -k https://kubernetes.default/api/v1/secrets -H "Authorization: Bearer ${TOKEN}"
+
+To use encrypted https connection:
+CACERT=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+curl --cacert ${CACERT} https://kubernetes.default/api/v1/secrets -H "Authorization: Bearer ${TOKEN}"
+
+-----------------------------------------------------------------
+
+Preview Question-2
+
+- to find the iptables rules of all nodes belonging the created a specific service
+
+- ssh into each node, then run iptables-save | grep SERVICE_NAME
+
+-----------------------------------------------------------------
+
+Preview Question-3
+
+- to change the service-cluster-ip-range, you need to change it in the kube-apiserver.yaml and kube-controller-manager.yaml
+files.
+
+-------------------------------------------------------------------
+
+Notes on ETCD kube-apiserver configuration:
+- --etcd-cafile is always should have the following path: /etc/kubernetes/pki/etcd/ca.crt
+            not this one: /etc/kubernetes/pki/ca.crt

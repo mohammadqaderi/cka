@@ -1,0 +1,9 @@
+Kubelet
+
+- The kubelet in the kubernetes worker node registers the node with
+  the kubernetes cluster.
+- When it receives instructions to load a container or a POD on the node,
+  it requests the container runtime engine, which may be Docker, to pull
+  the required image and run an instance.
+- The kubelet then continues to monitor the state of the POD and the
+   containers in it and reports to the kube-apiserver on a timely basis.

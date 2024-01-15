@@ -1,0 +1,11 @@
+Kube-API Server
+
+- is the primary management component in Kubernetes.
+- When you run a kubectl command, the kubectl utility is infact reaching
+  to the kube-apiserver
+- The kube-apiserver first authenticate the request and validates it.
+- it then retrieves the data from the ETCD cluster and responds back
+  with the requested information
+
+- The kube-apiserver is the only component that interacts directly
+  with the etcd datastore.

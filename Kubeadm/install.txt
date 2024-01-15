@@ -1,0 +1,77 @@
+- First, we'll have one master node and two worker nodes
+
+- Second, we'll install the containerd runtime and kubeadm in all the nodes
+
+- Finally, we'll configure Pod network solution in all the nodes
+
+
+Installing Kubeadm steps:
+
+1. set net.bridge.bridge-nf-call-iptables to 1 on each node:
+
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+br_netfilter
+EOF
+
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.bridge.bridge-nf-call-ip6tables = 1
+net.bridge.bridge-nf-call-iptables = 1
+EOF
+
+sudo sysctl --system
+
+
+2. Install kubeadm, kubectl and kubelet on all nodes:
+
+sudo apt-get update
+sudo apt-get install -y apt-transport-https ca-certificates curl
+
+mkdir -p /etc/apt/keyrings
+
+curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+sudo apt-get update
+
+# To see the new version labels
+sudo apt-cache madison kubeadm
+
+sudo apt-get install -y kubelet=1.27.0-00 kubeadm=1.27.0-00 kubectl=1.27.0-00
+
+sudo apt-mark hold kubelet kubeadm kubectl
+
+
+3. Initialize Control Plane Node (Master Node). Use the following options:
+
+   apiserver-advertise-address - Use the IP address allocated to eth0 on the controlplane node
+
+   apiserver-cert-extra-sans - Set it to controlplane
+
+   pod-network-cidr - Set to 10.244.0.0/16
+
+   command: kubeadm init --apiserver-advertise-address=$(ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}') --apiserver-cert-extra-sans=controlplane --pod-network-cidr=10.244.0.0/16
+   Once done, set up the default kubeconfig file and wait for node to be part of the cluster.
+
+
+4. Join the other nodes to the cluster:
+
+kubeadm join 192.40.217.6:6443 --token oe0ppv.2hu45bmguo6ctykd \
+        --discovery-token-ca-cert-hash sha256:a228f240bf5743626cffd373f24c44c1be14ee3a7c1a13b7a740f0a8f3f0d892
+
+
+5. Choose a network solution to deploy from the following link:
+https://kubernetes.io/docs/concepts/cluster-administration/addons/#networking-and-network-policy
+
+Deploy Flannel solution:
+- download the yaml file:
+curl -LO https://raw.githubusercontent.com/flannel-io/flannel/v0.20.2/Documentation/kube-flannel.yml
+
+- Locate the args section within the kube-flannel container definition
+
+- add the interface option to the args: (if you were asked to use "eth0" interface for inter-host communication)
+- --iface=eth0
+
+- deploy the file: k apply -f kube-flannel.yml
+
+

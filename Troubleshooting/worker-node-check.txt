@@ -1,0 +1,21 @@
+- Check the kubelet service:
+ service kubelet status
+
+
+- Check certificates expiration:
+ openssl x509 -in /var/lib/kubelet/worker-1.crt -text
+
+- Use Journalctl for logs:
+ sudo journalctl -u kubelet
+
+
+- If you found issue related to expired certificate, edit the kubelet config file under the following path:
+  /var/lib/kubelet
+
+edit config.yaml file  - edit x509 path to point to the /etc/kubernetes/pki/ca.crt file
+
+
+- Sometimes, the kubelet.conf file may be wrong, check the kube-apiserver path and port and make sure that the data is valid.
+ - Don't forget to restart the kubelet service after update: systemctl restart kubelet
+
+

@@ -1,0 +1,15 @@
+- In case there's no endpoint fo a service, You've to create the endpoint manually:
+
+ -> export IP_ADDR=$(ifconfig eth0 | grep inet | awk '{print $2}')
+ -> kubectl apply -f - <<EOF
+    apiVersion: v1
+    kind: Endpoints
+    metadata:
+      # the name here should match the name of the Service
+      name: SERVICE_NAME
+    subsets:
+      - addresses:
+          - ip: $IP_ADDR
+        ports:
+          - port: SERVICE_PORT_NUMBER
+EOF

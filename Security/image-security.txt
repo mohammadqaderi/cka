@@ -1,0 +1,19 @@
+- The pod image is coming from: library/image-name
+- by default the image is pulled from: docker.io/library/image-name
+- All of our examples, we were using a public images from public docker registry
+
+
+- When using private registry, we've to set the image path in the image property in pod definition
+
+- The pod can't pull the private image, because we've to login to the private registry account then we can pull the image
+
+- For that, we've to add authentication mechanism to the worker nodes to pull the image
+  -> create a secret of type docker-registry named "regcred" with the following data:
+    - --docker-server
+    - --docker-username
+    - --docker-password
+    - --docker-email
+
+  -> Under the pod spec, you've to add a property called "imagePullSecrets" of type array with the following data:
+   - name: regcred
+

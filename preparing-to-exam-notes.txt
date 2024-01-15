@@ -1,0 +1,18 @@
+- Cluster OS Upgrade and Kubeadm upgrade are finished
+
+- ETCD backup and configuration are finished.
+
+- Security + Certificates finished.
+
+- Working with networking - in progress...
+
+
+Review the following topics before exam:
+- Install Kubeadm and configure networking solution - Ex Flannel
+
+- Working with certificates + certificates APIs
+
+- Working with ETCD backup and restore
+
+- Working with Networking tools (iptables, proxy, CoreDNS, IPAM-weave, Service Networking, CNI + CNI-Weave)
+

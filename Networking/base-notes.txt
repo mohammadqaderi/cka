@@ -1,0 +1,44 @@
+- Switch connect hosts in the same network
+
+- Router connect one network to another network
+
+- To connect a network A to another network B, we use the ip route command:
+  ip route add 192.168.2.0/24 via 192.168.1.1
+
+
+- In case you need a default gateway that the network can access to connect with external networks use the following command:
+  ip route add (default or 0.0.0.0) via 192.168.2.1
+
+- To allow hosts to connect to each other, you need to add a routing table between each host and the desired network IP
+
+- By default, there are no ip forwarding in network interface packets
+  - you can see that in /proc/sys/net/ipv4/ip_forward
+  - in case the value is 0, then there are no forward
+  - change it to 1 to forward the packets responses
+  - Also, you need to set the net.ipv4.ip_forward to 1 under the /etc/sysctl.conf file
+
+
+- ip link command is to list and modify interfaces on the host
+
+- ip addr command is to see the IP address assigned to those interfaces
+
+- ip addr add command is used to set ip address on the interfaces
+  - the changes are not immediate.
+  - you've to change them in the /etc/network/interfaces file
+
+- ip route command to view the Kernal IP routing table
+
+- ip route add command is used to add entries into the routing table
+
+------------------------------------------------------------------------------------------------
+
+DNS
+
+- To check your device DNS nameserver, view the following file /etc/resolv.conf
+
+- You can add DNS host entry to the /etc/hosts file
+
+- When you ping host address, it first looks for that entry in /etc/hosts file, if it's not there, it'll look for it
+  in the DNS server
+  - You can change this order from this file /etc/nsswitch.conf file
+  - This order is exist under hosts property: files dns

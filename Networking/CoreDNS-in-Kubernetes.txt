@@ -1,0 +1,16 @@
+- The CoreDNS server is deployed as a pod in the kube-system namespace.
+
+- They are deployed as two pods for redundancy as a part of replicaset
+
+- CoreDNS requires a configuration file, in our case, we used a file name ./Corefile that located under:
+  /etc/coredns/Corefile
+
+- In Corefile, there are a set of plugins like errors, health, kubernetes, prometheus, proxy, cache, etc.
+
+- Every record in the CoreDNS server falls under the domain specified in the kubernetes plugin
+
+- The Corefile is passed for each pod as ConfigMap object
+
+- When we deploy the CoreDNS solution, it also creates a service to make it available to others components
+  within the cluster named as "kube-dns"
+  - The IP address of this service is configured as the nameserver on the Pods in /etc/resolv.conf

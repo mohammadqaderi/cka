@@ -1,0 +1,91 @@
+ETCD - Backup
+
+- in ETCD, the --data-dir option is specify where the etcd backup saved.
+
+- You can create a snapshot of the etcd database by using the etcdctl command tool:
+  ETCDCTL_API=3 etcdctl snapshot save snapshot.db
+
+- You can view the status of the backup by using the status command:
+  ETCDCTL_API=3 etcdctl snapshot status snapshot.db
+
+- To restore the cluster from this backup at a point in time:
+  1. Stop the kube-apiserver service: service kube-apiserver stop
+  2. Use the restore command to restore the backup of the cluster:
+     ETCDCTL_API=3 etcdctl snapshot restore snapshot.db --data-dir /var/lib/etcd-from-backup
+     (/var/lib/etcd-from-backup) this directory will be created
+
+  -> This will initialize a new cluster configuration and configures the members of etcd as a new members to a new cluster.
+  -> This is to prevent a new member from accidentally joining an existing cluster
+  3. edit the /etc/kubernetes/manifests/etcd.yaml file by changing the hostPath path to point to /var/lib/etcd-from-backup
+     location
+  4. restore the daemon service: systemctl daemon-reload
+  5. restart etcd service: service etcd restart
+  6. start the kube-apiserver service: service kube-apiserver start
+
+
+Note: for every etcdctl command you've to specify the following options:
+  1. --endpoints
+  2. --cacert
+  3. --cert
+  4. --key
+
+
+ETCD Notes
+
+To make use of etcdctl for tasks such as back up and restore, make sure that you set the ETCDCTL_API to 3.
+
+You can do this by exporting the variable ETCDCTL_API prior to using the etcdctl client. This can be done as follows:
+export ETCDCTL_API=3
+
+On the Master Node:
+- To see all the options for a specific sub-command, make use of the -h or –help flag.
+- For example, if you want to take a snapshot of etcd, use:
+  etcdctl snapshot save -h and keep a note of the mandatory global options.
+
+- Since our ETCD database is TLS-Enabled, the following options are mandatory:
+  –cacert: verify certificates of TLS-enabled secure servers using this CA bundle
+  –cert:   identify secure client using this TLS certificate file
+  –endpoints=[127.0.0.1:2379]: This is the default as ETCD is running on master node and exposed on localhost 2379.
+  –key: identify secure client using this TLS key file
+
+Example of backup scenario using etcd:
+
+ETCDCTL_API=3 etcdctl
+--endpoints=https://[127.0.0.1]:2379 \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
+--key=/etc/kubernetes/pki/etcd/server.key \
+snapshot save /opt/cluster1.db
+
+
+ETCDCTL_API=3 etcdctl
+--endpoints=https://[127.0.0.1]:2379 \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
+--key=/etc/kubernetes/pki/etcd/server.key \
+snapshot status /opt/cluster1.db
+
+ETCDCTL_API=3 etcdctl
+--endpoints=https://[127.0.0.1]:2379 \
+--cacert=/etc/kubernetes/pki/etcd/ca.crt \
+--cert=/etc/kubernetes/pki/etcd/server.crt \
+--key=/etc/kubernetes/pki/etcd/server.key \
+snapshot restore /opt/snapshot.db --data-dir /var/lib/etcd-from-backup
+
+
+ To view all the nodes of the ETCD cluster:
+
+ETCDCTL_API=3 etcdctl \
+--endpoints=https://127.0.0.1:2379 \
+--cacert=/etc/etcd/pki/ca.pem \
+--cert=/etc/etcd/pki/etcd.pem \
+--key=/etc/etcd/pki/etcd-key.pem \
+ member list
+
+
+For external ETCD cluster, when you make a snapshot, make sure to do the following:
+- Restore the snapshot file using snapshot restore command.
+- Edit the data-dir path in the etcd-service file: /etc/systemd/system/etcd.service
+- Add the correct permission for the data-dir file: chown -R etcd:etcd /var/lib/etcd-data-new
+- reload the daemon: systemctl daemon-reload
+- restart the etcd service: systemctl restart etcd

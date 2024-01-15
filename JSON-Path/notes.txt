@@ -1,0 +1,27 @@
+- Run kubectl get nodes -o json to get the output in json format
+
+- You'll use the JSON path in order to extract a specific data from a specific resource
+
+Examples:
+kubectl get pods -o=jsonpath='{.items[*].spec.containers[0].image}'
+
+kubectl get pods -o=jsonpath='{.items[*].spec.containers[0].image} {"\n"} {.items[*].spec.containers[0].resources.requests.cpu}'
+
+kubectl get pods -o=jsonpath='{.items[*].spec.containers[0].image} {"\t"} {.items[*].spec.containers[0].resources.requests.cpu}'
+
+kubectl get nodes -o=jsonpath='{.items[*].metadata.name} {"\n"} {.items[*].status.capacity.cpu}'
+
+
+Range example:
+kubectl get nodes -o=jsonpath='{range .items[*]}{.metadata.name} {"\t"} {.status.capacity.cpu}{"\n"} {end}'
+
+Custom columns
+Formula: kubectl get nodes -o=custom-columns=<Column Name>:<JSON Path>
+Ex: kubectl get nodes -o=custom-columns=NODE:.metadata.name,CPU:.status.capacity.cpu
+
+- You can sort the columns based on the column name
+kubectl get nodes -o=custom-columns=NODE:.metadata.name,CPU:.status.capacity.cpu --sort-by=.metadata.name
+
+
+Filtering with conditions:
+$.status.containerStatuses[?(@.name == 'redis-container')].restartCount

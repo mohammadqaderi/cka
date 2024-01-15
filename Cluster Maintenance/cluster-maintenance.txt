@@ -1,0 +1,14 @@
+- When a node goes down, the master node waits up to 5 minutes before considering the node dead.
+
+- pod-eviction-timeout is an option that set on the controller manager with a default value of 5 minutes
+
+- when you drain a node, all the running workloads inside this node will be moved periodically to another node,
+
+- the drained node will be marked as unschedulable meaning that no pods can be scheduled on this node until you specifically
+  remove this restriction.
+
+- When you restart the drained node, it'll still be unschedulable, so, you've to uncordon it so that pods can be scheduled
+  on it again.
+
+- Cordon command basically marks the node as unschedulable, unlike drain command, it'll not terminate or move the pods
+  on an existing node.

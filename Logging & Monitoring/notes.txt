@@ -1,0 +1,7 @@
+- Kubelet running subcomponents called as "c-advisor" that's responsible for retrieving performance metrics from pods
+  and exposing them through the kubelet API to make the metrics available for the metric server.
+
+- To install the metrics server do the following:
+ -> clone the metrics server repository git clone https://github.com/kodekloudhub/kubernetes-metrics-server.git
+ -> navigate to the cloned directory and run: kubectl create -f .
+

@@ -1,0 +1,4 @@
+Kube Scheduler
+
+- The scheduler is only responsible for deciding which pod goes on which
+  node.

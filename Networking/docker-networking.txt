@@ -1,0 +1,30 @@
+- Network types in Docker
+
+- None network (The container is not attached to any network)
+  docker run nginx --network none
+
+- Host network (The container is available on the host network)
+
+- Bridge network
+  - an internal private network is created, which the docker and the containers attach to.
+  - The network has an address 172.17.0.0 by default
+  - Each device connecting to this network get their own internal private network address
+
+- When docker is installed on the host it creates an internal private network called bridge by default.
+  Run docker network ls to view the networks
+
+- Name bridge in the network is the same as docker0
+
+- Whenever a container is created, Docker creates a network namespace for it.
+
+- How does Docker attach the container to the bridge?
+  -> it creates a cable (a virtual cable) with two interfaces on each end
+
+- Docker container is not reachable from outside the host network
+- For this, we use port mapping to map the private network from
+- It'll be available on the host identified by the mapped port
+ Example: docker run nginx -p 8080:80
+ curl http://192.168.1.10:8080
+
+- Under the hood, Docker uses the NAT gateway port forwarding mechanism to forward the traffic to the destination ip
+  iptables -t nat -A PREROUTING --dport 8080 --to-destination 80

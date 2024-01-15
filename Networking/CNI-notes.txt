@@ -1,0 +1,54 @@
+CNI (Container Network Interface)
+
+- Whenever RKT or Kubernetes create a new container, they called bridge to attach the container to network namespace
+  bridge add <cid> <namespace>
+
+- The CNI is a set of standards that define how programs should be developed to solve network challenges
+  in a container runtime environment.
+
+- The programs are referred to as plugins
+  -> In this case, the bridge program is a plugin for CNI.
+  -> CNI defines how the plugin should be developed and how container runtime should invoke them.
+  -> CNI defines a set of responsibilities for container runtime and plugin
+
+- CNI specifies that is responsible for:
+  - creating a network namespace for each container.
+  - Identify network the container must attach to.
+  - Container Runtime to invoke network plugin (Bridge) when container is added.
+  - Container Runtime to invoke network plugin (Bridge) when container is deleted.
+  - JSON format of the network configuration
+
+- Plugin responsible for:
+  - Supporting command line arguments like ADD/DEL/CHECK
+  - Supporting parameters like container id, network ns, etc...
+  - Managing IP address assignment to PODs
+  - Returning result in a specific format
+
+- CNI comes with a set of supported plugins already like:
+  - BRIDGE
+  - VLAN
+  - IPVLAN
+  - MACVLAN
+  - WINDOWS
+
+- When Kubernetes creates docker containers, it creates them in a "none" network
+- It then invokes the configured CNI plugins who take care of the rest of the configuration.
+
+
+- To view interface information run: ip address show interface-name
+
+- If you asked to view the MAC address of a particular worker node:
+ - ssh NODE_NAME
+ - Run ip addr to view the interface details and get the MAC address
+
+- If you asked what is the interface/bridge created by the ContainerD on the host:
+ - Run ip addr show type bridge
+
+- If you asked what is the IP address of the default gateway:
+  - Run ip route
+
+- If you asked what is the port for a particular component of kubernetes:
+  - Run netstat -npl | grep -i COMPONENT_NAME
+
+- If you asked how many established connections on port for a particular component of kubernetes:
+  - Run netstat -npa | grep -i COMPONENT_NAME

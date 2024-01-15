@@ -1,0 +1,68 @@
+- There are three types of certificates:
+
+ - Server certificates
+   -> Configured on servers
+
+ - Root certificates
+   -> Configured on the CA servers (Certificate Authority)
+
+ - Client certificates
+   -> Configured on the client
+
+
+- Examples of Public Key certificates (*.crt, *.pem)
+  server.crt, server.pem, client.crt, client.pem
+
+- Examples of Private Key certificates (*.key, *-key.pem)
+  server.key, server-key.pem, client.key, client-key.pem
+
+------------------------------------------------------------------------------------------------
+
+Kube-apiserver
+
+- The kube-apiserver exposes a secure https endpoint, and the communication between it and between other services is secured
+  via TLS Certificate
+
+  - apiserver.crt
+  - apiserver.key
+
+ETCD Server
+
+- The ETCD Server exposes a secure https endpoint, and the communication between it and between other services is secured
+  via TLS Certificate
+
+  - etcdserver.crt
+  - etcdserver.key
+
+Kubelet Server (In worker nodes)
+
+- The Kubelet Server exposes a secure https endpoint, and the communication between it and between other services is secured
+  via TLS Certificate
+
+  - kubelet.crt
+  - kubelet.key
+
+Admin User Client
+- Will provide a public/private certificates for communicate with kube-apiserver
+  - admin.crt
+  - admin.key
+
+Kube Scheduler Client
+- Just like the admin, it'll try to communicate with kube-apiserver with tls encryption connection
+- The kube-scheduler will have its own public/private keys: scheduler.crt, scheduler.key
+
+Kube Controller Manager Client
+- Just like the admin and kube-scheduler, it'll try to communicate with kube-apiserver with tls encryption connection
+- The Kube Controller Manager will have its own public/private keys: controller-manager.crt, controller-manager.key
+
+Kube Proxy Client
+- Just like the admin and kube-scheduler and kube-controller-manager, it'll try to communicate with kube-apiserver
+  with tls encryption connection
+- The Kube Proxy will have its own public/private keys: kube-proxy.crt, kube-proxy.key
+
+Notes:
+- the Kube-apiserver is the only component that talks to etcd server
+- the Kube-apiserver also talks to the kubelet-server on each of the individual nodes
+  -> That's how it monitors the worker nodes
+- We can generate global client certificates for the clients components
+- We can to generate a global server certificates for the servers components

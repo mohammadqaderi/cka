@@ -1,0 +1,39 @@
+- To view the non-namespaced resources run the following command:
+ kubectl api-resources --namespaced=false
+
+- To view the namespaced resources run the following command:
+ kubectl api-resources --namespaced=true
+
+- To create a role for listing,creating, updating namespaced resources we use the Role Object Resource
+
+- To create a role for listing,creating, updating non-namespaced resources we use the ClusterRole Object Resource
+
+- You can create a role for authorizing resources like pods, but it'll be for all namespaces
+
+
+Example of creating a cluster role and cluster role binding for a user to manage nodes:
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: node-admin
+rules:
+- apiGroups: [""]
+  resources: ["nodes"]
+  verbs: ["get", "watch", "list", "create", "delete"]
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: michelle-binding
+subjects:
+- kind: User // you can set it to Group if you want to use this role for multiple users group
+  name: michelle
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: node-admin
+  apiGroup: rbac.authorization.k8s.io
+
+- Run kubectl auth can-i list nodes --as michelle to check if michelle can list nodes
